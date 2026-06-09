@@ -775,6 +775,11 @@ function getCycleRange() {
   const endDate = `${endDayDate.getFullYear()}-${String(endDayDate.getMonth()+1).padStart(2,'0')}-${String(endDayDate.getDate()).padStart(2,'0')}`;
   return { startDate, endDate, startYear, startMonth, endYear, endMonth, startDay };
 }
+// 获取当前周期的预购列表（按添加日期归属周期）
+function getPreordersThisCycle() {
+  const { startDate, endDate } = getCycleRange();
+  return (state.preorders || []).filter(p => p.date >= startDate && p.date <= endDate);
+}
 
 function getCnMonth() {
   const cn = cnNow();
@@ -2410,13 +2415,15 @@ function getRealBalance() {
 }
 
 function getPreorderTotal() {
-  return (state.preorders||[]).reduce((s,p)=>s+p.price,0);
+  // 返回当前周期预购总额（修改周期起始日后会自动跟着变化）
+  return getPreordersThisCycle().reduce((s,p)=>s+p.price,0);
 }
 
 function renderBudgetPage() {
   const realBalance = getRealBalance();
-  const preorders = state.preorders || [];
-  const preTotal = getPreorderTotal();
+  const { startDate, endDate } = getCycleRange();
+  const preorders = getPreordersThisCycle();
+  const preTotal = preorders.reduce((s,p) => s + p.price, 0);
   const remain = realBalance - preTotal;
   const minLine = state.budgetMinLine || 500;
 
